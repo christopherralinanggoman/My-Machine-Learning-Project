@@ -1,0 +1,48 @@
+<!doctype html> <!-- Deklarasi dokumen HTML5 -->
+<html lang="en"> <!-- Set bahasa dokumen -->
+<head> <!-- Awal bagian kepala dokumen -->
+  <meta charset="utf-8"> <!-- Encoding karakter UTF-8 -->
+  <title><em>PHP Vulnerability Detector</em></title> <!-- Judul halaman ditampilkan miring -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> <!-- Muat CSS dari folder static -->
+</head> <!-- Akhir head -->
+<body> <!-- Awal isi halaman -->
+  <div class="container"> <!-- Kontainer utama untuk layout -->
+    <h1><em>PHP Vulnerability Detector</em></h1> <!-- Judul aplikasi -->
+
+    <form method="post"> <!-- Form kirim kode via POST -->
+      <textarea name="code" placeholder="Tempel kode PHP di sini...">{{ code|default('') }}</textarea><br> <!-- Area input kode dan isi ulang dari server -->
+      <button type="submit"><em>Analyze</em></button> <!-- Tombol untuk memicu analisis -->
+    </form> <!-- Akhir form -->
+
+    {% if prediction %}{# Tampilkan blok hasil hanya jika ada prediksi #}
+      {% set plower = prediction|lower %}{# Normalisasi prediksi ke huruf kecil #}
+      {% set is_vuln = ('vulnerable' in plower and 'invulnerable' not in plower) %}{# True jika label mengandung kata vulnerable tapi bukan invulnerable #}
+      <div class="result {{ 'vuln' if is_vuln else 'safe' }}"> <!-- Kelas CSS result diset sesuai status -->
+        <span class="label"><em>Prediction</em>:</span> <!-- Label teks prediksi -->
+        <span class="badge {{ 'badge-red' if is_vuln else 'badge-green' }}">{{ prediction }}</span> <!-- Badge warna: hijau untuk vulnerable, merah untuk aman -->
+      </div> <!-- Akhir blok hasil -->
+    {% endif %}{# Akhir pengecekan prediksi #}
+
+    {% if probs %}{# Tampilkan probabilitas kelas jika tersedia #}
+      <div class="probs"> <!-- Kontainer daftar probabilitas -->
+        <h3><em>Class probabilities</em></h3> <!-- Judul bagian probabilitas -->
+        <ul class="prob-list"> <!-- Daftar baris probabilitas -->
+          {% for p in probs %}{# Iterasi setiap item probabilitas #}
+            <li class="prob-row {% if p.is_pred %}is-pred{% endif %}"> <!-- Tandai baris prediksi utama -->
+              <span class="prob-label">{{ p.label }}</span> <!-- Nama kelas -->
+              <div class="bar-track"> <!-- Track bar untuk progres -->
+                <div class="bar-fill {% if p.is_pred %}is-pred{% endif %}" style="width: {{ '%.2f'|format(p.percent) }}%"></div> <!-- Isi bar sesuai persen -->
+              </div> <!-- Akhir bar-track -->
+              <span class="prob-value">{{ '%.2f'|format(p.percent) }}%</span> <!-- Teks nilai persen -->
+            </li> <!-- Akhir satu baris probabilitas -->
+          {% endfor %}{# Akhir iterasi probabilitas #}
+        </ul> <!-- Akhir daftar probabilitas -->
+      </div> <!-- Akhir kontainer probabilitas -->
+    {% endif %}{# Akhir pengecekan probs #}
+
+    {% if error %}{# Tampilkan error jika ada #}
+      <div class="error">Error during analysis:<br>{{ error }}</div> <!-- Blok pesan error dari server -->
+    {% endif %}{# Akhir pengecekan error #}
+  </div> <!-- Akhir kontainer utama -->
+</body> <!-- Akhir body -->
+</html> <!-- Akhir dokumen -->
